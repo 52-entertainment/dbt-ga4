@@ -66,7 +66,11 @@
         {% do run_query(combine_specified_property_data_query) %}
 
         {% if execute %}
-            {{ log("Cloned from `" ~ property_item['project'] ~ ".analytics_" ~ property_id ~ ".events_*` to `" ~ target.project ~ "." ~ var('combined_dataset') ~ ".events_YYYYMMDD" ~ property_id ~ "`.", True) }}
+            {% if should_full_refresh() %}
+                {{ log("Cloned (FULL) from `" ~ property_item['project'] ~ ".analytics_" ~ property_id ~ ".events_*` to `" ~ target.project ~ "." ~ var('combined_dataset') ~ ".events_YYYYMMDD" ~ property_id ~ "`.", True) }}
+            {% else %}
+                {{ log("Cloned (INCREMENTAL) from `" ~ property_item['project'] ~ ".analytics_" ~ property_id ~ ".events_*` to `" ~ target.project ~ "." ~ var('combined_dataset') ~ ".events_YYYYMMDD" ~ property_id ~ "`.", True) }}
+            {% endif %}
         {% endif %}
     {% endfor %}
 {% endmacro %}
