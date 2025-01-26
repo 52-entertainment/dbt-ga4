@@ -3,6 +3,7 @@
 {%- endmacro -%}
 
 {% macro default__combine_property_data() %}
+
     {% if not should_full_refresh() %}
         {# If incremental, then use static_incremental_days variable to find earliest shard to copy #}
         {%- set earliest_shard_to_retrieve = (modules.datetime.date.today() - modules.datetime.timedelta(days=var('static_incremental_days')))|string|replace("-", "")|int -%}
@@ -10,6 +11,42 @@
         {# Otherwise use 'start_date' variable #}
         {%- set earliest_shard_to_retrieve = var('start_date')|int -%}
     {% endif %}
+
+    {# 52 Entertainment specific #}
+    {% set development_database = 'fft-tmp-staging' %}
+    {% set production_staging_database = 'fft-staging' %}
+    {% set external_dev_database = 'fft-external' %}
+    
+    {% set custom_dataset =  var('combined_dataset') + env_var("DBT_DATASET_SUFFIX", "")  %}
+
+    {# Define Target DB and Dataset to use #}
+    {% if target.name == "ci_cd" %}
+        {% set target_db = var('ga4')['project'] %}  
+        {% set target_dataset = var('combined_dataset') %}  
+
+    {% elif target.name == "prod_Hex5674v_sec" %}
+        {% set target_db = production_staging_database %}  
+        {% set target_dataset = var('combined_dataset') %} 
+
+    {% elif target.name == "dev_sf63b6RG_sec" %}
+        {% set target_db = development_database %}  
+        {% set target_dataset = var('combined_dataset') %} 
+
+    {% elif target.name == "guest" %}
+        {% set target_db = external_dev_database %}
+        {% set target_dataset = custom_dataset  %} 
+
+    {% else %}
+        {% set target_db = var('ga4')['project'] %}  
+        {% set target_dataset = custom_dataset %} 
+
+    {% endif %}
+
+    {% if execute %}
+        {{ log("In the combine_property_macro writing into`" ~  target_db ~ "." ~ target_dataset ~"`", True) }}
+    {% endif %}
+
+    create schema if not exists `{{ target_db }}.{{ target_dataset }}`;
 
     {# 
         Multiple-project support
@@ -37,11 +74,9 @@
     {% for property_item in property_dict_lst %}
         {%- set property_id = property_item['property_id']|string -%}
         {%- set schema_name = "analytics_" + property_id|string -%}
-        {# {%- set schema_name = "analytics_" + property_id|string -%} #}
         {%- set project_name = property_item['project']|string -%}
 
         {%- set combine_specified_property_data_query -%}
-            create schema if not exists `{{project_name}}.{{var('combined_dataset')}}`;
 
             {# Copy intraday tables #}
             {%- set relations = dbt_utils.get_relations_by_pattern(schema_pattern=schema_name, table_pattern='events_intraday_%', database=property_item['project']) -%}
