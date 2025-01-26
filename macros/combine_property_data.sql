@@ -83,7 +83,7 @@
             {% for relation in relations %}
                 {%- set relation_suffix = relation.identifier|replace('events_intraday_', '') -%}
                 {%- if relation_suffix|int >= earliest_shard_to_retrieve|int -%}
-                    create or replace table `{{target.project}}.{{var('combined_dataset')}}.events_intraday_{{relation_suffix}}{{property_id}}` clone `{{property_item['project']}}.analytics_{{property_id}}.events_intraday_{{relation_suffix}}`;
+                    create or replace table `{{target_db}}.{{var('combined_dataset')}}.events_intraday_{{relation_suffix}}{{property_id}}` clone `{{property_item['project']}}.analytics_{{property_id}}.events_intraday_{{relation_suffix}}`;
                 {%- endif -%}
             {% endfor %}
 
@@ -92,8 +92,8 @@
             {% for relation in relations %}
                 {%- set relation_suffix = relation.identifier|replace('events_', '') -%}
                 {%- if relation_suffix|int >= earliest_shard_to_retrieve|int -%}
-                    create or replace table `{{target.project}}.{{var('combined_dataset')}}.events_{{relation_suffix}}{{property_id}}` clone `{{property_item['project']}}.analytics_{{property_id}}.events_{{relation_suffix}}`;
-                    drop table if exists `{{target.project}}.{{var('combined_dataset')}}.events_intraday_{{relation_suffix}}{{property_id}}`;
+                    create or replace table `{{target_db}}.{{var('combined_dataset')}}.events_{{relation_suffix}}{{property_id}}` clone `{{property_item['project']}}.analytics_{{property_id}}.events_{{relation_suffix}}`;
+                    drop table if exists `{{target_db}}.{{var('combined_dataset')}}.events_intraday_{{relation_suffix}}{{property_id}}`;
                 {%- endif -%}
             {% endfor %}
         {%- endset -%}
@@ -102,9 +102,9 @@
 
         {% if execute %}
             {% if should_full_refresh() %}
-                {{ log("Cloned (FULL) from `" ~ property_item['project'] ~ ".analytics_" ~ property_id ~ ".events_*` to `" ~ target.project ~ "." ~ var('combined_dataset') ~ ".events_YYYYMMDD" ~ property_id ~ "`.", True) }}
+                {{ log("Cloned (FULL) from `" ~ property_item['project'] ~ ".analytics_" ~ property_id ~ ".events_*` to `" ~ target_db ~ "." ~ var('combined_dataset') ~ ".events_YYYYMMDD" ~ property_id ~ "`.", True) }}
             {% else %}
-                {{ log("Cloned (INCREMENTAL) from `" ~ property_item['project'] ~ ".analytics_" ~ property_id ~ ".events_*` to `" ~ target.project ~ "." ~ var('combined_dataset') ~ ".events_YYYYMMDD" ~ property_id ~ "`.", True) }}
+                {{ log("Cloned (INCREMENTAL) from `" ~ property_item['project'] ~ ".analytics_" ~ property_id ~ ".events_*` to `" ~ target_db ~ "." ~ var('combined_dataset') ~ ".events_YYYYMMDD" ~ property_id ~ "`.", True) }}
             {% endif %}
         {% endif %}
     {% endfor %}
