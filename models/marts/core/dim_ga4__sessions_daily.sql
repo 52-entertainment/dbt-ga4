@@ -56,6 +56,8 @@ with event_dimensions as
         user_campaign,
         user_medium,
         user_source,
+        app_info_version,
+        user_pseudo_id
     from {{ref('stg_ga4__events')}}
     where event_name != 'first_visit' 
     and event_name != 'session_start'
@@ -137,6 +139,8 @@ with event_dimensions as
         ,FIRST_VALUE(user_campaign IGNORE NULLS) OVER (session_partition_window) AS user_campaign
         ,FIRST_VALUE(user_medium IGNORE NULLS) OVER (session_partition_window) AS user_medium
         ,FIRST_VALUE(user_source IGNORE NULLS) OVER (session_partition_window) AS user_source
+        ,FIRST_VALUE(app_info_version IGNORE NULLS) OVER (session_partition_window) AS app_info_version
+        ,FIRST_VALUE(user_pseudo_id IGNORE NULLS) OVER (session_partition_window) AS user_pseudo_id
         from event_dimensions
     WINDOW session_partition_window AS (PARTITION BY session_partition_key ORDER BY event_timestamp ASC ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
 )
