@@ -60,8 +60,9 @@ with event_dimensions as
         app_info_id,
         user_pseudo_id
     from {{ref('stg_ga4__events')}}
-    where event_name != 'first_visit' 
-    and event_name != 'session_start'
+    where 1=1
+    --and event_name != 'first_visit' 
+    --and event_name != 'session_start'
     {% if is_incremental() %}
             and event_date_dt in ({{ partitions_to_replace | join(',') }})
     {% endif %}
